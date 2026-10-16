@@ -5,3 +5,4 @@ train_sources.csv
 BACA_SAYA.txt
 __pycache__/
 *.pyc
+.venv/
