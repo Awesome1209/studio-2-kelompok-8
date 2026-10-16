@@ -1,0 +1,7 @@
+train/
+my_train/
+my_val/
+train_sources.csv
+BACA_SAYA.txt
+__pycache__/
+*.pyc
