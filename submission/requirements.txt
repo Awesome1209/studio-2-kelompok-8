@@ -1,5 +1,1 @@
-torch
-torchvision
-pillow
-numpy
-matplotlib
+timm
