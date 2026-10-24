@@ -6,3 +6,5 @@ BACA_SAYA.txt
 __pycache__/
 *.pyc
 .venv/
+gtrain/
+gval/
