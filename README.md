@@ -28,6 +28,23 @@ Model yang dikirim untuk **Final** adalah *fine-tuning* **ConvNeXt-Tiny pretrain
 
 ## Hasil
 
+### Model final (ConvNeXt-Tiny)
+ 
+| Pengukuran | Macro-F1 | Catatan |
+|------------|----------|---------|
+|  |  | |
+|  | | |
+ 
+Hasil per kelas pada `gval`:
+ 
+| Kelas          | F1    |
+|----------------|-------|
+| botol_plastik  |  |
+| gelas_plastik  |  |
+| kertas_kardus  |  |
+| saset_kemasan  |  |
+| styrofoam      |  |
+
 | Putaran | Commit | Macro-F1 (split validasi lokal) | Macro-F1 (diumumkan asisten) |
 |---------|--------|----------------------------------|------------------------------|
 | Preview 1 (14 Okt) | | | |
