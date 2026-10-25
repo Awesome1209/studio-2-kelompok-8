@@ -48,11 +48,11 @@ Model final dilatih hanya pada `gtrain` (85% train set resmi), sehingga `gval` t
 
 ### Skor putaran evaluasi
 
-| Putaran |Model | Macro-F1 lokal | Macro-F1 spreadsheet |
-|---------|--------|-------|---------------------------------|------------------------------|
+| Putaran | Model | Macro-F1 lokal | Macro-F1 spreadsheet |
+| :--- | :--- | :---: | :---: |
 | Preview 1 (14 Okt) | ResNet-18 pretrained | 0.9117 | 0.9150 |
 | Preview 2 (21 Okt) | ResNet-18 pretrained | 0.9117 | 0.9150 |
-| Final (25 Okt)     | ConvNeXt-Tiny | 0,9709 | - |
+| Final (25 Okt)     | ConvNeXt-Tiny       | 0.9709 |   -    |
 
 ### Catatan eksperimen
 
