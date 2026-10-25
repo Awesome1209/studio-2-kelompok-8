@@ -5,16 +5,16 @@ Deep Learning (IF25-40401) · Teknik Informatika ITERA · Semester Ganjil 2026/2
 
 ## Anggota Kelompok
 
-| No | Nama Lengkap | NIM | Kontribusi utama |
-|----|--------------|-----|------------------|
-| 1  | Dzaky pramadhani | 123140208 |             |
-| 2  | M Farisi Suyitno | 123140152 |             |
-| 3  | Awi Septian Prasetyo | 123140201 |         |
+| No | Nama Lengkap         | NIM       | Kontribusi utama |
+|----|----------------------|-----------|------------------|
+| 1  | Dzaky pramadhani     | 123140208 | Preprocessing dan augmentasi data|
+| 2  | M Farisi Suyitno     | 123140152 | Fine-Tuning dan Submission|
+| 3  | Awi Septian Prasetyo | 123140201 | Tuning Model dan Evaluasi|
 
 ## Ringkasan Pendekatan
 
-Model yang dikirim untuk **Final** adalah *fine-tuning* **ConvNeXt-Tiny pretrained ImageNet** (`timm`, ±27,8 juta parameter). Model awal pada Preview 1 (ResNet-18 pretrained) dijelaskan di bagian "Riwayat Eksperimen" dan sudah tidak dipakai. <ISI: model yang dipakai pada Preview 2>
- 
+Model yang dikirim untuk **Final** adalah *fine-tuning* **ConvNeXt-Tiny pretrained ImageNet** (`timm`, ±27,8 juta parameter). Model awal pada Preview 1 (ResNet-18 pretrained) dijelaskan di bagian "Riwayat Eksperimen" dan sudah tidak dipakai. 
+
 - **Arsitektur**: `timm.create_model("convnext_tiny", pretrained=False, num_classes=5)`, kepala klasifikasi diganti menjadi 5 kelas. Pada pelatihan, bobot pretrained dimuat dari `timm` (kecuali kepala klasifikasi, karena ukurannya berbeda). `get_model()` hanya membangun arsitektur, bobot dimuat oleh `evaluate.py`.
 - **Preprocessing**: `Resize(292)` → `CenterCrop(256)` → `ToTensor()` → normalisasi mean/std ImageNet. Transform yang sama dipakai saat validasi dan inferensi.
 - **Pelatihan**:
@@ -29,59 +29,80 @@ Model yang dikirim untuk **Final** adalah *fine-tuning* **ConvNeXt-Tiny pretrain
 ## Hasil
 
 ### Model final (ConvNeXt-Tiny)
- 
+
 | Pengukuran | Macro-F1 | Catatan |
 |------------|----------|---------|
-|  |  | |
-|  | | |
- 
-Hasil per kelas pada `gval`:
- 
-| Kelas          | F1    |
-|----------------|-------|
-| botol_plastik  |  |
-| gelas_plastik  |  |
-| kertas_kardus  |  |
-| saset_kemasan  |  |
-| styrofoam      |  |
+| Split per domain 85/15 (`gval`, n = 412), epoch terbaik | **0,9709** | Akurasi 0,9733 (401 dari 412 gambar benar). Optimistis: epoch dipilih dari validasi yang sama. |
 
-| Putaran | Commit | Macro-F1 (split validasi lokal) | Macro-F1 (diumumkan asisten) |
-|---------|--------|----------------------------------|------------------------------|
-| Preview 1 (14 Okt) | | | |
-| Preview 2 (21 Okt) | | | |
-| Final (25 Okt)     | | | |
+Hasil per kelas pada `gval` (dihitung dari confusion matrix `evaluate.py`):
 
-Catatan eksperimen singkat (apa yang dicoba, apa yang berhasil/gagal):
+| Kelas          | Precision | Recall | F1     |
+|----------------|-----------|--------|--------|
+| botol_plastik  | 1,0000    | 0,9802 | 0,9900 |
+| gelas_plastik  | 0,9643    | 1,0000 | 0,9818 |
+| kertas_kardus  | 0,9870    | 0,9870 | 0,9870 |
+| saset_kemasan  | 0,9516    | 0,9077 | 0,9291 |
+| styrofoam      | 0,9556    | 0,9773 | 0,9663 |
+
+Model final dilatih hanya pada `gtrain` (85% train set resmi), sehingga `gval` tidak ikut pelatihan. Namun bobot terbaik dipilih berdasarkan skor di `gval`, jadi skor tersebut sedikit optimistis dan bukan estimasi yang sepenuhnya bersih. Skor `evaluate.py` pada `gval` sama dengan angka di tabel di atas.
+
+### Skor putaran evaluasi
+
+| Putaran |Model | Macro-F1 lokal | Macro-F1 spreadsheet |
+|---------|--------|-------|---------------------------------|------------------------------|
+| Preview 1 (14 Okt) | ResNet-18 pretrained | 0.9117 | 0.9150 |
+| Preview 2 (21 Okt) | ResNet-18 pretrained | 0.9117 | 0.9150 |
+| Final (25 Okt)     | ConvNeXt-Tiny | 0,9709 | - |
+
+### Catatan eksperimen
+
+- Perubahan terbesar dari Preview 1 ke model final adalah pindah ke *backbone* yang lebih kuat (ResNet-18 → ConvNeXt-Tiny), input yang lebih besar (224 → 256), dan resep pelatihan yang lebih kaya (Mixup/CutMix, `TrivialAugmentWide`, `RandomErasing`, EMA, *warm-up*, *gradient clipping*).
+- Split acak per gambar diganti dengan split per domain website. Gambar dari website yang sama sering mirip, sehingga split acak membuat skor validasi terlalu tinggi. 
+- Selain ConvNeXt-Tiny, kami menyiapkan eksperimen Vision Transformer (`vit_small_patch16_224.augreg_in21k_ft_in1k`, 15 epoch, lr 5e-5) di `model_transformer.ipynb`. 
+- Pada `gval`, 11 dari 412 gambar salah prediksi. Kelas terlemah adalah `saset_kemasan` (F1 0,929): 6 dari 65 gambarnya salah, tertukar dengan `styrofoam` (3), `gelas_plastik` (2), dan `kertas_kardus` (1). Kelas ini juga menerima 3 prediksi salah dari kelas lain (2 dari `styrofoam`, 1 dari `botol_plastik`).
+- `gelas_plastik` tidak punya gambar yang terlewat (recall 1,0), tetapi presisinya 0,964 karena 3 gambar kelas lain diprediksi sebagai gelas (2 dari `saset_kemasan`, 1 dari `botol_plastik`).
+- Hal yang belum diterapkan pada submission: *test-time augmentation*, *ensemble*, dan pembersihan label.
+
+## Riwayat Eksperimen (model awal, Preview 1)
+
+- **Arsitektur**: ResNet-18 pretrained ImageNet (torchvision), kepala klasifikasi diganti menjadi 5 kelas, seluruh layer di-*fine-tune*.
+- **Pelatihan**: AdamW (lr 3e-4, weight decay 1e-4), `CosineAnnealingLR`, 10 epoch, batch 32, `CrossEntropyLoss` dengan *label smoothing* 0,1, seed 42. Augmentasi: `RandomResizedCrop` (skala 0,6–1,0), *horizontal flip*, `ColorJitter`. Split validasi lokal 15% secara acak per gambar, dan checkpoint dipilih dari Macro-F1 tertinggi.
+- **Hasil lokal Preview 1**: Macro-F1 · akurasi .
+- Notebook: `model.ipynb`. Catatan progres: `docs/progress_mingguan.md`.
 
 ## Cara Reproduksi
- 
-Eksperimen dijalankan di <ISI: Google Colab / lokal, jenis GPU> dengan train set resmi di `train/<kelas>/*.jpg` dan `train_sources.csv` di folder utama repo. Keduanya tidak disertakan di repo.
- 
+
+Eksperimen dijalankan di lokal dengan train set resmi di `train/<kelas>/*.jpg` dan `train_sources.csv` di folder utama repo. Keduanya tidak disertakan di repo.
+
 1. Pasang paket dan unduh bobot dari Git LFS:
+
 ```bash
 pip install -r requirements.txt
 git lfs pull
 ```
- 
+
 2. Buat split per domain (hasilnya `gtrain/` dan `gval/`; hapus kedua folder tersebut jika ingin split ulang):
+
 ```bash
 python make_group_split.py
 ```
- 
+
 3. Latih model. Argumen bawaan sudah sesuai konfigurasi final (20 epoch, lr 1e-4, batch 24, seed 42), dan bobot terbaik ditulis ke `submission/model.pth`:
+
 ```bash
 python train.py --train gtrain --val gval --out submission
 ```
- 
+
 4. Uji submission:
+
 ```bash
 python evaluate.py --submission ./submission --data ./gval
 ```
- 
+
 Paket yang dibutuhkan ada di `requirements.txt`: `torch`, `torchvision`, `pillow`, `numpy`, dan `timm`. Notebook juga memakai `matplotlib`. Submission sendiri memerlukan `torch`, `torchvision`, `pillow`, dan `timm`, dan `submission/requirements.txt` berisi `timm`.
- 
+
 ## Struktur Repositori
- 
+
 ```
 submission/
   model.py                 # get_model() dan get_transform()

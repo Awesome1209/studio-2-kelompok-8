@@ -11,7 +11,7 @@ from torch.utils.data import DataLoader
 from torchvision import datasets, transforms
 
 from evaluate import metrics
-from submission2.model import IMG, NAME, get_model, get_transform
+from submission.model import IMG, NAME, get_model, get_transform
 
 
 def main():
